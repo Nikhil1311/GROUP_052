@@ -3,7 +3,7 @@ from torch import nn
 import torch.nn.functional as F
 from torch import distributions as pyd
 import math
-import GROUP_052.sac.utils as utils
+import .utils as utils
 
 class DoubleQCritic(nn.Module):
     """Critic network, employes double Q-learning."""

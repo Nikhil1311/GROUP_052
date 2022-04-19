@@ -8,8 +8,8 @@ import numpy as np
 import pickle
 import tensorflow as tf
 import torch
-from GROUP_052.agent import Agent
-import GROUP_052.sac.utils as utils
+from agent import Agent
+import sac.utils as utils
 import os
 from os import listdir, makedirs
 from os.path import isfile, join
