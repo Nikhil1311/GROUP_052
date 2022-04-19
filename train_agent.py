@@ -8,7 +8,7 @@ import numpy as np
 import pickle
 import tensorflow as tf
 import torch
-from GROUP_052.agent import SACAgent
+from GROUP_052.agent import Agent
 import GROUP_052.sac.utils as utils
 import os
 from os import listdir, makedirs
@@ -134,7 +134,7 @@ def train_agent(agent,
 
     # run training update
     if step >= args.num_seed_steps:
-      agent.update(replay_buffer, args.use_wandb, step)
+      agent.update(replay_buffer, args.use_wandb, step, args.step_per_inter)
 
     next_obs, reward, done, _ = env.step(action)
 
@@ -151,10 +151,13 @@ def train_agent(agent,
     step += 1
 
     if step % evaluation_freq == 0:
+      # print(len(replay_buffer))
       avg_reward = evaluate_agent(env, agent, video_recorder, num_eval_episodes=n_episodes_to_evaluate, step=step)
       array_of_mean_acc_rewards.append(avg_reward)
       if args.use_wandb:
         wandb.log({'iter': step, 'episode':episode, 'eval average ep reward': avg_reward})
+    if step % args.reset_every == 0:
+      agent.reinit_model()
 
   pickle_file = work_dir + f"/model_final.pt"
   with open(pickle_file, "wb") as fh:
@@ -173,7 +176,8 @@ def train_agent(agent,
 
 
 if __name__ == '__main__':
-    
+
+
   parser = argparse.ArgumentParser(description='')
   parser.add_argument('--group', type=str, default='GROUP_052', help='group directory')
   parser.add_argument("--use_wandb", action="store_true")
@@ -185,12 +189,16 @@ if __name__ == '__main__':
   parser.add_argument("--n_episodes_to_evaluate", type=int, default=20)
   parser.add_argument("--num_seed_steps", type=int, default=2000)
   parser.add_argument("--hidden_dim", type=int, default=256)
+  parser.add_argument("--reset_every", type=int, default=200000)
+  parser.add_argument("--step_per_inter", type=int, default=1)
+  parser.add_argument("--wandb_dir", type=str, default="/home/mila/m/mengfei.zhou/scratch/hopper")
 
   args = parser.parse_args()
 
   # set up wandb
+  os.environ["WANDB_DIR"] = args.wandb_dir
   if args.use_wandb:
-    group_vars = ['total_timesteps', 'seed', 'n_episodes_to_evaluate', 'num_seed_steps', 'hidden_dim']
+    group_vars = ['total_timesteps', 'seed', 'n_episodes_to_evaluate', 'num_seed_steps', 'hidden_dim', 'reset_every', 'step_per_inter']
 
     group_name = ''
     for var in group_vars:
@@ -221,7 +229,7 @@ if __name__ == '__main__':
     env_specs = {'observation_space': env.observation_space, 'action_space': env.action_space}
   # agent_module = importlib.import_module(args.group+'.agent')
   # agent = agent_module.Agent(env_specs)
-  agent = SACAgent(env_specs=env_specs, device=args.device, hidden_dim=args.hidden_dim)
+  agent = Agent(env_specs=env_specs, device=args.device, hidden_dim=args.hidden_dim)
   work_dir = '/home/mila/m/mengfei.zhou/scratch/hopper/%s' % args.group_name
   replay_buffer = utils.ReplayBuffer(env_specs['observation_space'].shape,
                                env_specs['action_space'].shape,
