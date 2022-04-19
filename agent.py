@@ -1,8 +1,9 @@
 import numpy as np
 import torch
 import torch.nn.functional as F
-from GROUP_052.sac.sac import *
-import GROUP_052.sac.utils as utils
+from .sac.sac import *
+from .sac import utils as utils
+import zipfile
 # import wandb
 
 if torch.cuda.is_available():
@@ -121,12 +122,15 @@ class Agent(BaseAgent):
 
     # Add root_path in front of the path of the saved network parameters
     # For example if you have weights.pth in the GROUP_MJ1, do `root_path+"weights.pth"` while loading the parameters
-        checkpoint = torch.load(root_path + 'model_final.pt', map_location=device)
 
-        self.critic = checkpoint['agent'].critic
-        self.critic_target = checkpoint['agent'].critic_target
-        self.actor = checkpoint['agent'].actor
-        self.log_alpha = checkpoint['agent'].log_alpha
+        with zipfile.ZipFile(root_path + 'model_final.zip', 'r') as zip_ref:
+            zip_ref.extractall(root_path + 'model_final_unzipped')
+
+        checkpoint = torch.load(root_path + 'model_final_unzipped/model_final.pt', map_location=device)
+        self.critic = checkpoint['critic']
+        self.critic_target = checkpoint['critic_target']
+        self.actor = checkpoint['actor']
+        self.log_alpha = checkpoint['log_alpha']
 
         if self.timestep == 0:
             self.timestep = 1000000
