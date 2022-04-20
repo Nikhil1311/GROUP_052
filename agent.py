@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from .sac.sac import *
 from .sac import utils as utils
 import zipfile
-# import wandb
+import wandb
 
 if torch.cuda.is_available():
     device='cuda'
@@ -174,7 +174,7 @@ class Agent(BaseAgent):
         critic_loss = F.mse_loss(current_Q1, target_Q) + F.mse_loss(
             current_Q2, target_Q)
 
-        if use_wandb:
+        if use_wandb and step % 1000 == 0:
             wandb.log({'iter':step, 'critic train loss': critic_loss.detach().cpu().item()})
 
         # Optimize the critic
@@ -191,7 +191,7 @@ class Agent(BaseAgent):
 
         actor_Q = torch.min(actor_Q1, actor_Q2)
         actor_loss = (self.alpha.detach() * log_prob - actor_Q).mean()
-        if use_wandb:
+        if use_wandb and step % 1000 == 0:
             wandb.log({'iter':step, 'actor train loss': actor_loss.detach().cpu().item(), 'actor entropy':-log_prob.mean().detach().cpu().item()})
 
         # logger.log('train_actor/loss', actor_loss, step)
@@ -209,7 +209,7 @@ class Agent(BaseAgent):
             self.log_alpha_optimizer.zero_grad()
             alpha_loss = (self.alpha *
                           (-log_prob - self.target_entropy).detach()).mean()
-            if use_wandb:
+            if use_wandb and step % 1000 == 0:
                 wandb.log({'iter': step, 'alpha train loss': alpha_loss.detach().cpu().item(),
                            'alpha value': self.alpha})
             #
@@ -222,7 +222,7 @@ class Agent(BaseAgent):
     #     obs, action, reward, next_obs, not_done, not_done_no_max = replay_buffer.sample(
     #         self.batch_size)
     #
-    #     if use_wandb:
+    #     if use_wandb and step % 1000 == 0:
     #         wandb.log({'iter': step, 'train batch reward': reward.mean().detach().cpu().item()})
     #
     #     # logger.log('train/batch_reward', reward.mean(), step)
@@ -236,6 +236,7 @@ class Agent(BaseAgent):
     #         if step % self.critic_target_update_frequency == 0:
     #             utils.soft_update_params(self.critic, self.critic_target,
     #                                      self.critic_tau)
+
     def reinit_model(self):
         print("PERFORM RESET")
         self.critic = DoubleQCritic(obs_dim=self.obs_dim,
@@ -256,9 +257,6 @@ class Agent(BaseAgent):
 
         self.log_alpha = torch.tensor(np.log(self.init_temperature)).to(self.device)
         self.log_alpha.requires_grad = True
-
-        # set target entropy to -|A|
-        self.target_entropy = -self.action_dim
 
         # optimizers
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(),

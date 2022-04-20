@@ -8,8 +8,8 @@ import numpy as np
 import pickle
 import tensorflow as tf
 import torch
-from agent import Agent
-import sac.utils as utils
+from GROUP_052.agent import Agent
+import GROUP_052.sac.utils as utils
 import os
 from os import listdir, makedirs
 from os.path import isfile, join
@@ -104,22 +104,6 @@ def train_agent(agent,
       obs = env.reset()
       agent.reset()
 
-      if episode_reward > current_best:
-        current_best = episode_reward
-        pickle_file = work_dir + f"/model_best.pt"
-        with open(pickle_file, "wb") as fh:
-          save_state = {'agent':agent,
-                        'log_alpha_optimizer':agent.log_alpha_optimizer.state_dict(),
-                        'actor_optimizer': agent.actor_optimizer.state_dict(),
-                        'critic_optimizer': agent.critic_optimizer.state_dict(),
-                        'step':step,
-                        'episode':episode,
-                        'episode_step':episode_step,
-                        'episode_reward':episode_reward,
-                        'done':done
-                        }
-          torch.save(save_state, fh)
-
       done = False
       episode_reward = 0
       episode_step = 0
@@ -143,6 +127,7 @@ def train_agent(agent,
     done_no_max = 0 if episode_step + 1 == _max_episode_steps else done
     episode_reward += reward
 
+    # if (step <= args.reset_every) or ((step % args.reset_every) >= args.num_seed_steps):
     replay_buffer.add(obs, action, reward, next_obs, done,
                       done_no_max)
 
@@ -154,6 +139,22 @@ def train_agent(agent,
       # print(len(replay_buffer))
       avg_reward = evaluate_agent(env, agent, video_recorder, num_eval_episodes=n_episodes_to_evaluate, step=step)
       array_of_mean_acc_rewards.append(avg_reward)
+      if avg_reward > current_best:
+        current_best = avg_reward
+        pickle_file = work_dir + f"/model_best.pt"
+        with open(pickle_file, "wb") as fh:
+          save_state = {'agent':agent,
+                        'log_alpha_optimizer':agent.log_alpha_optimizer.state_dict(),
+                        'actor_optimizer': agent.actor_optimizer.state_dict(),
+                        'critic_optimizer': agent.critic_optimizer.state_dict(),
+                        'step':step,
+                        'episode':episode,
+                        'episode_step':episode_step,
+                        'episode_reward':episode_reward,
+                        'done':done
+                        }
+          torch.save(save_state, fh)
+
       if args.use_wandb:
         wandb.log({'iter': step, 'episode':episode, 'eval average ep reward': avg_reward})
     if step % args.reset_every == 0:
@@ -191,6 +192,7 @@ if __name__ == '__main__':
   parser.add_argument("--hidden_dim", type=int, default=256)
   parser.add_argument("--reset_every", type=int, default=200000)
   parser.add_argument("--step_per_inter", type=int, default=1)
+  parser.add_argument("--batch_size", type=int, default=256)
   parser.add_argument("--wandb_dir", type=str, default="/home/mila/m/mengfei.zhou/scratch/hopper")
 
   args = parser.parse_args()
@@ -198,7 +200,7 @@ if __name__ == '__main__':
   # set up wandb
   os.environ["WANDB_DIR"] = args.wandb_dir
   if args.use_wandb:
-    group_vars = ['total_timesteps', 'seed', 'n_episodes_to_evaluate', 'num_seed_steps', 'hidden_dim', 'reset_every', 'step_per_inter']
+    group_vars = ['total_timesteps', 'seed', 'n_episodes_to_evaluate', 'num_seed_steps', 'hidden_dim', 'reset_every', 'step_per_inter', 'batch_size']
 
     group_name = ''
     for var in group_vars:
@@ -229,7 +231,7 @@ if __name__ == '__main__':
     env_specs = {'observation_space': env.observation_space, 'action_space': env.action_space}
   # agent_module = importlib.import_module(args.group+'.agent')
   # agent = agent_module.Agent(env_specs)
-  agent = Agent(env_specs=env_specs, device=args.device, hidden_dim=args.hidden_dim)
+  agent = Agent(env_specs=env_specs, device=args.device, hidden_dim=args.hidden_dim, batch_size=args.batch_size)
   work_dir = '/home/mila/m/mengfei.zhou/scratch/hopper/%s' % args.group_name
   replay_buffer = utils.ReplayBuffer(env_specs['observation_space'].shape,
                                env_specs['action_space'].shape,
