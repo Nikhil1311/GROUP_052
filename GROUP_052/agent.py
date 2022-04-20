@@ -127,9 +127,9 @@ class Agent(BaseAgent):
             zip_ref.extractall(root_path + 'model_final_unzipped')
 
         checkpoint = torch.load(root_path + 'model_final_unzipped/model_final.pt', map_location=device)
-        self.critic = checkpoint['critic']
-        self.critic_target = checkpoint['critic_target']
-        self.actor = checkpoint['actor']
+        self.critic.load_state_dict(checkpoint['critic'])
+        self.critic_target.load_state_dict(checkpoint['critic_target'])
+        self.actor.load_state_dict(checkpoint['actor'])
         self.log_alpha = checkpoint['log_alpha']
 
         if self.timestep == 0:
