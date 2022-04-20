@@ -136,28 +136,28 @@ class Agent(BaseAgent):
             self.timestep = 1000000
 
 
-    # def act(self, obs, sample=False):
-    #     obs = torch.FloatTensor(obs).to(self.device)
-    #     obs = obs.unsqueeze(0)
-    #     dist = self.actor(obs)
-    #     action = dist.sample() if sample else dist.mean
-    #     action = action.clamp(*self.action_range)
-    #     assert action.ndim == 2 and action.shape[0] == 1
-    #     return utils.to_np(action[0])
+    def act(self, obs, sample=False):
+        obs = torch.FloatTensor(obs).to(self.device)
+        obs = obs.unsqueeze(0)
+        dist = self.actor(obs)
+        action = dist.sample() if sample else dist.mean
+        action = action.clamp(*self.action_range)
+        assert action.ndim == 2 and action.shape[0] == 1
+        return utils.to_np(action[0])
 
-    def act(self, obs, mode='train'):
-        if self.timestep < 2000:
-            action = self.env_specs['action_space'].sample()
-            return action
-        else:
-            with utils.eval_mode(self):
-                obs = torch.FloatTensor(obs).to(self.device)
-                obs = obs.unsqueeze(0)
-                dist = self.actor(obs)
-                action = dist.sample() if mode == 'train' else dist.mean
-                action = action.clamp(*self.action_range)
-                assert action.ndim == 2 and action.shape[0] == 1
-            return utils.to_np(action[0])
+    # def act(self, obs, mode='train'):
+    #     if self.timestep < 2000:
+    #         action = self.env_specs['action_space'].sample()
+    #         return action
+    #     else:
+    #         with utils.eval_mode(self):
+    #             obs = torch.FloatTensor(obs).to(self.device)
+    #             obs = obs.unsqueeze(0)
+    #             dist = self.actor(obs)
+    #             action = dist.sample() if mode == 'train' else dist.mean
+    #             action = action.clamp(*self.action_range)
+    #             assert action.ndim == 2 and action.shape[0] == 1
+    #         return utils.to_np(action[0])
 
     def update_critic(self, obs, action, reward, next_obs, not_done, use_wandb, step):
         dist = self.actor(next_obs)
@@ -218,24 +218,24 @@ class Agent(BaseAgent):
             alpha_loss.backward()
             self.log_alpha_optimizer.step()
 
-    # def update(self, replay_buffer, use_wandb, step, step_per_inter=1):
-    #     obs, action, reward, next_obs, not_done, not_done_no_max = replay_buffer.sample(
-    #         self.batch_size)
-    #
-    #     if use_wandb and step % 1000 == 0:
-    #         wandb.log({'iter': step, 'train batch reward': reward.mean().detach().cpu().item()})
-    #
-    #     # logger.log('train/batch_reward', reward.mean(), step)
-    #     for i in range(step_per_inter):
-    #         self.update_critic(obs, action, reward, next_obs, not_done_no_max, use_wandb,
-    #                            step)
-    #
-    #         if step % self.actor_update_frequency == 0:
-    #             self.update_actor_and_alpha(obs, use_wandb, step)
-    #
-    #         if step % self.critic_target_update_frequency == 0:
-    #             utils.soft_update_params(self.critic, self.critic_target,
-    #                                      self.critic_tau)
+    def update(self, replay_buffer, use_wandb, step, step_per_inter=1):
+        obs, action, reward, next_obs, not_done, not_done_no_max = replay_buffer.sample(
+            self.batch_size)
+
+        if use_wandb and step % 1000 == 0:
+            wandb.log({'iter': step, 'train batch reward': reward.mean().detach().cpu().item()})
+
+        # logger.log('train/batch_reward', reward.mean(), step)
+        for i in range(step_per_inter):
+            self.update_critic(obs, action, reward, next_obs, not_done_no_max, use_wandb,
+                               step)
+
+            if step % self.actor_update_frequency == 0:
+                self.update_actor_and_alpha(obs, use_wandb, step)
+
+            if step % self.critic_target_update_frequency == 0:
+                utils.soft_update_params(self.critic, self.critic_target,
+                                         self.critic_tau)
 
     def reinit_model(self):
         print("PERFORM RESET")
@@ -274,27 +274,27 @@ class Agent(BaseAgent):
         self.train()
         self.critic_target.train()
 
-
-    def update(self, curr_obs, action, reward, next_obs, done, timestep):
-        self.timestep = timestep
-
-        if timestep < 2000:
-            self.replay_buffer.add(curr_obs, action, reward, next_obs, done, done)
-        else:
-            self.replay_buffer.add(curr_obs, action, reward, next_obs, done, done)
-            for i in range(1):
-                obs, action, reward, next_obs, not_done, not_done_no_max = self.replay_buffer.sample(
-                    self.batch_size)
-
-                self.update_critic(obs, action, reward, next_obs, not_done_no_max, use_wandb=False,
-                                   step=timestep)
-
-            if timestep % self.actor_update_frequency == 0:
-                self.update_actor_and_alpha(obs, use_wandb=False, step=timestep)
-
-            if timestep % self.critic_target_update_frequency == 0:
-                utils.soft_update_params(self.critic, self.critic_target,
-                                         self.critic_tau)
+    #
+    # def update(self, curr_obs, action, reward, next_obs, done, timestep):
+    #     self.timestep = timestep
+    #
+    #     if timestep < 2000:
+    #         self.replay_buffer.add(curr_obs, action, reward, next_obs, done, done)
+    #     else:
+    #         self.replay_buffer.add(curr_obs, action, reward, next_obs, done, done)
+    #         for i in range(1):
+    #             obs, action, reward, next_obs, not_done, not_done_no_max = self.replay_buffer.sample(
+    #                 self.batch_size)
+    #
+    #             self.update_critic(obs, action, reward, next_obs, not_done_no_max, use_wandb=False,
+    #                                step=timestep)
+    #
+    #         if timestep % self.actor_update_frequency == 0:
+    #             self.update_actor_and_alpha(obs, use_wandb=False, step=timestep)
+    #
+    #         if timestep % self.critic_target_update_frequency == 0:
+    #             utils.soft_update_params(self.critic, self.critic_target,
+    #                                      self.critic_tau)
 
 
 
