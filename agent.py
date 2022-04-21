@@ -41,7 +41,7 @@ class Agent(BaseAgent):
 
     def __init__(self, env_specs, obs_dim=11, action_dim=3, hidden_dim=512, hidden_depth=2, action_range=[-1, 1], device=device,
                  discount=0.99, init_temperature=0.2, alpha_lr=3e-4, alpha_betas=[0.9, 0.999],
-                 actor_lr=1e-3, actor_betas=[0.9, 0.999], actor_update_frequency=1, critic_lr=1e-3,
+                 actor_lr=1e-4, actor_betas=[0.9, 0.999], actor_update_frequency=1, critic_lr=1e-4,
                  critic_betas=[0.9, 0.999], critic_tau=0.005, critic_target_update_frequency=2,
                  batch_size=256, learnable_temperature=True):
         super().__init__(env_specs)
@@ -65,10 +65,10 @@ class Agent(BaseAgent):
         self.critic_lr = critic_lr
         self.critic_betas = critic_betas
 
-        self.replay_buffer = utils.ReplayBuffer(self.env_specs['observation_space'].shape,
-                                self.env_specs['action_space'].shape,
-                                1000000,
-                                self.device)
+        # self.replay_buffer = utils.ReplayBuffer(self.env_specs['observation_space'].shape,
+        #                         self.env_specs['action_space'].shape,
+        #                         1000000,
+        #                         self.device)
 
         self.critic = DoubleQCritic(obs_dim=obs_dim,
                                     action_dim=action_dim,
