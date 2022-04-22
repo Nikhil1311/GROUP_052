@@ -101,6 +101,22 @@ def train_agent(agent,
       episode_reward_all.append(episode_reward)
       if args.use_wandb:
         wandb.log({'iter': step, 'episode':episode, 'train ep reward': episode_reward})
+
+      if episode_reward > current_best:
+        current_best = episode_reward
+        pickle_file = work_dir + f"/model_best.pt"
+        with open(pickle_file, "wb") as fh:
+          save_state = {'agent':agent,
+                        'log_alpha_optimizer':agent.log_alpha_optimizer.state_dict(),
+                        'actor_optimizer': agent.actor_optimizer.state_dict(),
+                        'critic_optimizer': agent.critic_optimizer.state_dict(),
+                        'step':step,
+                        'episode':episode,
+                        'episode_step':episode_step,
+                        'episode_reward':episode_reward,
+                        'done':done
+                        }
+          torch.save(save_state, fh)
       obs = env.reset()
       agent.reset()
 
@@ -139,26 +155,12 @@ def train_agent(agent,
       # print(len(replay_buffer))
       avg_reward = evaluate_agent(env, agent, video_recorder, num_eval_episodes=n_episodes_to_evaluate, step=step)
       array_of_mean_acc_rewards.append(avg_reward)
-      if avg_reward > current_best:
-        current_best = avg_reward
-        pickle_file = work_dir + f"/model_best.pt"
-        with open(pickle_file, "wb") as fh:
-          save_state = {'agent':agent,
-                        'log_alpha_optimizer':agent.log_alpha_optimizer.state_dict(),
-                        'actor_optimizer': agent.actor_optimizer.state_dict(),
-                        'critic_optimizer': agent.critic_optimizer.state_dict(),
-                        'step':step,
-                        'episode':episode,
-                        'episode_step':episode_step,
-                        'episode_reward':episode_reward,
-                        'done':done
-                        }
-          torch.save(save_state, fh)
 
       if args.use_wandb:
         wandb.log({'iter': step, 'episode':episode, 'eval average ep reward': avg_reward})
-    if step % args.reset_every == 0:
-      agent.reinit_model()
+    if (args.reset_every > 0) and (step % args.reset_every == 0):
+      agent = Agent(env_specs=env_specs, device=args.device, hidden_dim=args.hidden_dim, batch_size=args.batch_size)
+      # agent.reinit_model()
 
   pickle_file = work_dir + f"/model_final.pt"
   with open(pickle_file, "wb") as fh:
