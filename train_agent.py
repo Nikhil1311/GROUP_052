@@ -93,7 +93,7 @@ def train_agent(agent,
   while step < total_timesteps:
     if done:
       # evaluate agent periodically
-      if step > 0 and step % evaluation_freq == 0:
+      if step > 0 and episode % 100 == 0:
         average_episode_reward = evaluate_agent(env, agent, video_recorder, num_eval_episodes=n_episodes_to_evaluate, step=step)
         if args.use_wandb:
           wandb.log({'iter': step, 'episode':episode, 'eval done average ep reward': average_episode_reward})
@@ -102,8 +102,8 @@ def train_agent(agent,
       if args.use_wandb:
         wandb.log({'iter': step, 'episode':episode, 'train ep reward': episode_reward})
 
-      if episode_reward > current_best:
-        current_best = episode_reward
+      if average_episode_reward > current_best:
+        current_best = average_episode_reward
         pickle_file = work_dir + f"/model_best.pt"
         with open(pickle_file, "wb") as fh:
           save_state = {'agent':agent,
@@ -113,7 +113,7 @@ def train_agent(agent,
                         'step':step,
                         'episode':episode,
                         'episode_step':episode_step,
-                        'episode_reward':episode_reward,
+                        'episode_reward':average_episode_reward,
                         'done':done
                         }
           torch.save(save_state, fh)
