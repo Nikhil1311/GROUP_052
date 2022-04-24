@@ -212,7 +212,7 @@ if __name__ == '__main__':
   parser.add_argument("--reset_every", type=int, default=200000)
   parser.add_argument("--step_per_inter", type=int, default=1)
   parser.add_argument("--batch_size", type=int, default=256)
-  parser.add_argument("--wandb_dir", type=str, default="/home/hattie/scratch/hopper")
+  parser.add_argument("--wandb_dir", type=str, default="/home/mila/m/mengfei.zhou/scratch/hopper")
 
   args = parser.parse_args()
 
@@ -251,7 +251,7 @@ if __name__ == '__main__':
   # agent_module = importlib.import_module(args.group+'.agent')
   # agent = agent_module.Agent(env_specs)
   agent = Agent(env_specs=env_specs, device=args.device, hidden_dim=args.hidden_dim, batch_size=args.batch_size)
-  work_dir = '/home/hattie/scratch/hopper/%s' % args.group_name
+  work_dir = '/home/mila/m/mengfei.zhou/scratch/hopper/%s' % args.group_name
   replay_buffer = utils.ReplayBuffer(env_specs['observation_space'].shape,
                                env_specs['action_space'].shape,
                                args.total_timesteps,
