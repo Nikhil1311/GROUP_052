@@ -39,11 +39,11 @@ class BaseAgent():
 class Agent(BaseAgent):
     """SAC algorithm."""
 
-    def __init__(self, env_specs, obs_dim=11, action_dim=3, hidden_dim=512, hidden_depth=2, action_range=[-1, 1], device=device,
-                 discount=0.99, init_temperature=0.05, alpha_lr=3e-4, alpha_betas=[0.9, 0.999],
+    def __init__(self, env_specs, obs_dim=11, action_dim=3, hidden_dim=512, hidden_depth=4, action_range=[-1, 1], device=device,
+                 discount=0.99, init_temperature=0.2, alpha_lr=3e-4, alpha_betas=[0.9, 0.999],
                  actor_lr=1e-3, actor_betas=[0.9, 0.999], actor_update_frequency=1, critic_lr=1e-3,
                  critic_betas=[0.9, 0.999], critic_tau=0.005, critic_target_update_frequency=2,
-                 batch_size=1024, learnable_temperature=False):
+                 batch_size=1024, learnable_temperature=True):
         super().__init__(env_specs)
         self.action_range = action_range
         self.device = torch.device(device)
