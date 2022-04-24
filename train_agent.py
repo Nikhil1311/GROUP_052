@@ -161,7 +161,7 @@ def train_agent(agent,
       if args.use_wandb:
         wandb.log({'iter': step, 'episode':episode, 'eval average ep reward': avg_reward})
     if (args.reset_every > 0) and (step % args.reset_every == 0):
-      agent = Agent(env_specs=env_specs, device=args.device, hidden_dim=args.hidden_dim, batch_size=args.batch_size)
+      agent = Agent(env_specs=env_specs, device=args.device, hidden_dim=args.hidden_dim, batch_size=args.batch_size, hidden_depth=args.hidden_depth)
       # agent.reinit_model()
 
     if step % 100000 == 0:
@@ -209,10 +209,11 @@ if __name__ == '__main__':
   parser.add_argument("--n_episodes_to_evaluate", type=int, default=20)
   parser.add_argument("--num_seed_steps", type=int, default=2000)
   parser.add_argument("--hidden_dim", type=int, default=256)
+  parser.add_argument("--hidden_depth", type=int, default=2)
   parser.add_argument("--reset_every", type=int, default=200000)
   parser.add_argument("--step_per_inter", type=int, default=1)
   parser.add_argument("--batch_size", type=int, default=256)
-  parser.add_argument("--wandb_dir", type=str, default="/home/mila/m/mengfei.zhou/scratch/hopper")
+  parser.add_argument("--wandb_dir", type=str, default="/home/hattie/scratch/hopper")
 
   args = parser.parse_args()
 
@@ -250,8 +251,8 @@ if __name__ == '__main__':
     env_specs = {'observation_space': env.observation_space, 'action_space': env.action_space}
   # agent_module = importlib.import_module(args.group+'.agent')
   # agent = agent_module.Agent(env_specs)
-  agent = Agent(env_specs=env_specs, device=args.device, hidden_dim=args.hidden_dim, batch_size=args.batch_size)
-  work_dir = '/home/mila/m/mengfei.zhou/scratch/hopper/%s' % args.group_name
+  agent = Agent(env_specs=env_specs, device=args.device, hidden_dim=args.hidden_dim, batch_size=args.batch_size, hidden_depth=args.hidden_depth)
+  work_dir = '/home/hattie/scratch/hopper/%s' % args.group_name
   replay_buffer = utils.ReplayBuffer(env_specs['observation_space'].shape,
                                env_specs['action_space'].shape,
                                args.total_timesteps,
