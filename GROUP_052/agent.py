@@ -285,15 +285,15 @@ class Agent(BaseAgent):
             self.replay_buffer.add(curr_obs, action, reward, next_obs, done, done)
         else:
             self.replay_buffer.add(curr_obs, action, reward, next_obs, done, done)
-            for i in range(1):
-                obs, action, reward, next_obs, not_done, not_done_no_max = self.replay_buffer.sample(
-                    self.batch_size)
-
+            
+            obs, action, reward, next_obs, not_done, not_done_no_max = self.replay_buffer.sample(
+                self.batch_size)
+            for i in range(5):
                 self.update_critic(obs, action, reward, next_obs, not_done_no_max, use_wandb=False,
                                    step=timestep)
 
-            if timestep % self.actor_update_frequency == 0:
-                self.update_actor_and_alpha(obs, use_wandb=False, step=timestep)
+                if timestep % self.actor_update_frequency == 0:
+                    self.update_actor_and_alpha(obs, use_wandb=False, step=timestep)
 
             if timestep % self.critic_target_update_frequency == 0:
                 utils.soft_update_params(self.critic, self.critic_target,
