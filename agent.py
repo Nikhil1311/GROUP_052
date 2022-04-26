@@ -67,7 +67,7 @@ class Agent(BaseAgent):
 
         self.replay_buffer = utils.ReplayBuffer(self.env_specs['observation_space'].shape,
                                 self.env_specs['action_space'].shape,
-                                1000000,
+                                100000,
                                 self.device)
 
         self.critic = DoubleQCritic(obs_dim=obs_dim,
