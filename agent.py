@@ -288,7 +288,7 @@ class Agent(BaseAgent):
             
             obs, action, reward, next_obs, not_done, not_done_no_max = self.replay_buffer.sample(
                 self.batch_size)
-            for i in range(2):
+            for i in range(1):
                 self.update_critic(obs, action, reward, next_obs, not_done_no_max, use_wandb=False,
                                    step=timestep)
 
