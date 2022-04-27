@@ -43,7 +43,7 @@ class Agent(BaseAgent):
                  discount=0.99, init_temperature=0.2, alpha_lr=3e-4, alpha_betas=[0.9, 0.999],
                  actor_lr=1e-3, actor_betas=[0.9, 0.999], actor_update_frequency=1, critic_lr=1e-3,
                  critic_betas=[0.9, 0.999], critic_tau=0.005, critic_target_update_frequency=2,
-                 batch_size=512, learnable_temperature=True):
+                 batch_size=1024, learnable_temperature=True):
         super().__init__(env_specs)
         self.action_range = action_range
         self.device = torch.device(device)
@@ -288,7 +288,7 @@ class Agent(BaseAgent):
             
             obs, action, reward, next_obs, not_done, not_done_no_max = self.replay_buffer.sample(
                 self.batch_size)
-            for i in range(5):
+            for i in range(2):
                 self.update_critic(obs, action, reward, next_obs, not_done_no_max, use_wandb=False,
                                    step=timestep)
 
