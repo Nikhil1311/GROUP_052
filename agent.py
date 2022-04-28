@@ -65,7 +65,7 @@ class Agent(BaseAgent):
         self.actor_betas = actor_betas
         self.critic_lr = critic_lr
         self.critic_betas = critic_betas
-
+        print('initializing')
         self.replay_buffer = utils.ReplayBuffer(self.env_specs['observation_space'].shape,
                                 self.env_specs['action_space'].shape,
                                 100000,
