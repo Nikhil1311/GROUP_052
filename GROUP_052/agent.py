@@ -227,11 +227,11 @@ class Agent(BaseAgent):
 
         # logger.log('train/batch_reward', reward.mean(), step)
         for i in range(step_per_inter):
-            self.update_critic(obs, action, reward, next_obs, not_done_no_max, use_wandb,
+            self.update_critic(obs, action, reward, next_obs, not_done_no_max, i==0,
                                step)
 
             if step % self.actor_update_frequency == 0:
-                self.update_actor_and_alpha(obs, use_wandb, step)
+                self.update_actor_and_alpha(obs, i==0, step)
 
             if step % self.critic_target_update_frequency == 0:
                 utils.soft_update_params(self.critic, self.critic_target,

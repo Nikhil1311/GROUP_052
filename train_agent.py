@@ -208,7 +208,7 @@ if __name__ == '__main__':
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--total_timesteps", type=int, default=100000)
-    parser.add_argument("--evaluation_freq", type=int, default=100)
+    parser.add_argument("--evaluation_freq", type=int, default=500)
     parser.add_argument("--n_episodes_to_evaluate", type=int, default=20)
     parser.add_argument("--num_seed_steps", type=int, default=2000)
     parser.add_argument("--hidden_dim", type=int, default=512)
