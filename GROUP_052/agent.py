@@ -6,10 +6,11 @@ from .sac import utils as utils
 import zipfile
 # import wandb
 
-if torch.cuda.is_available():
-    device='cuda'
-else:
-    device='cpu'
+# if torch.cuda.is_available():
+#     device='cuda'
+# else:
+#     device='cpu'
+device='cuda'
 
 class BaseAgent():
     '''The agent class that is to be filled.
@@ -40,10 +41,10 @@ class Agent(BaseAgent):
     """SAC algorithm."""
 
     def __init__(self, env_specs, obs_dim=11, action_dim=3, hidden_dim=512, hidden_depth=4, action_range=[-1, 1], device=device,
-                 discount=0.99, init_temperature=0.2, alpha_lr=3e-4, alpha_betas=[0.9, 0.999],
+                 discount=0.99, init_temperature=0.1, alpha_lr=3e-4, alpha_betas=[0.9, 0.999],
                  actor_lr=1e-3, actor_betas=[0.9, 0.999], actor_update_frequency=1, critic_lr=1e-3,
                  critic_betas=[0.9, 0.999], critic_tau=0.005, critic_target_update_frequency=2,
-                 batch_size=1024, learnable_temperature=True):
+                 batch_size=256, learnable_temperature=False):
         super().__init__(env_specs)
         self.action_range = action_range
         self.device = torch.device(device)
@@ -64,10 +65,10 @@ class Agent(BaseAgent):
         self.actor_betas = actor_betas
         self.critic_lr = critic_lr
         self.critic_betas = critic_betas
-
+        print('initializing')
         self.replay_buffer = utils.ReplayBuffer(self.env_specs['observation_space'].shape,
                                 self.env_specs['action_space'].shape,
-                                1000000,
+                                100000,
                                 self.device)
 
         self.critic = DoubleQCritic(obs_dim=obs_dim,
@@ -102,9 +103,10 @@ class Agent(BaseAgent):
                                                  lr=critic_lr,
                                                  betas=critic_betas)
 
-        self.log_alpha_optimizer = torch.optim.Adam([self.log_alpha],
-                                                    lr=alpha_lr,
-                                                    betas=alpha_betas)
+        if self.learnable_temperature:
+            self.log_alpha_optimizer = torch.optim.Adam([self.log_alpha],
+                                                        lr=alpha_lr,
+                                                        betas=alpha_betas)
 
         self.train()
         self.critic_target.train()
@@ -147,7 +149,7 @@ class Agent(BaseAgent):
     #     return utils.to_np(action[0])
 
     def act(self, obs, mode='train'):
-        if self.timestep < 2000:
+        if self.timestep < 1000:
             action = self.env_specs['action_space'].sample()
             return action
         else:
@@ -281,14 +283,14 @@ class Agent(BaseAgent):
     def update(self, curr_obs, action, reward, next_obs, done, timestep):
         self.timestep = timestep
 
-        if timestep < 2000:
+        if timestep < 1000:
             self.replay_buffer.add(curr_obs, action, reward, next_obs, done, done)
         else:
             self.replay_buffer.add(curr_obs, action, reward, next_obs, done, done)
             
             obs, action, reward, next_obs, not_done, not_done_no_max = self.replay_buffer.sample(
                 self.batch_size)
-            for i in range(5):
+            for i in range(1):
                 self.update_critic(obs, action, reward, next_obs, not_done_no_max, use_wandb=False,
                                    step=timestep)
 
