@@ -41,10 +41,10 @@ class Agent(BaseAgent):
     """SAC algorithm."""
 
     def __init__(self, env_specs, obs_dim=11, action_dim=3, hidden_dim=512, hidden_depth=4, action_range=[-1, 1], device=device,
-                 discount=0.99, init_temperature=0.1, alpha_lr=3e-4, alpha_betas=[0.9, 0.999],
+                 discount=0.99, init_temperature=0.2, alpha_lr=3e-4, alpha_betas=[0.9, 0.999],
                  actor_lr=1e-3, actor_betas=[0.9, 0.999], actor_update_frequency=1, critic_lr=1e-3,
                  critic_betas=[0.9, 0.999], critic_tau=0.005, critic_target_update_frequency=2,
-                 batch_size=512, learnable_temperature=False):
+                 batch_size=512, learnable_temperature=True):
         super().__init__(env_specs)
         self.action_range = action_range
         self.device = torch.device(device)
@@ -149,7 +149,7 @@ class Agent(BaseAgent):
     #     return utils.to_np(action[0])
 
     def act(self, obs, mode='train'):
-        if self.timestep < 2000:
+        if self.timestep < 1000:
             action = self.env_specs['action_space'].sample()
             return action
         else:
@@ -283,14 +283,14 @@ class Agent(BaseAgent):
     def update(self, curr_obs, action, reward, next_obs, done, timestep):
         self.timestep = timestep
 
-        if timestep < 2000:
+        if timestep < 1000:
             self.replay_buffer.add(curr_obs, action, reward, next_obs, done, done)
         else:
             self.replay_buffer.add(curr_obs, action, reward, next_obs, done, done)
             
             obs, action, reward, next_obs, not_done, not_done_no_max = self.replay_buffer.sample(
                 self.batch_size)
-            for i in range(1):
+            for i in range(3):
                 self.update_critic(obs, action, reward, next_obs, not_done_no_max, use_wandb=False,
                                    step=timestep)
 
